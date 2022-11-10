@@ -18,14 +18,14 @@ public class TriggerService {
     private static final String SAMPLE_IMAGE = "/sample-image.jpg";
     private static final String PUSH_URI = "http://localhost:7110/";
 
-    public void triggerIt() throws IOException {
+    public void triggerIt(boolean doCleanUp) throws IOException {
         Class cls = TriggerService.class;
         InputStream inputStream = cls.getResourceAsStream(SAMPLE_IMAGE);
         byte[] bytes = IOUtils.toByteArray(inputStream);
-        sendBuffer(bytes);
+        sendBuffer(bytes, doCleanUp);
     }
 
-    private void sendBuffer(byte[] bytesToSend) {
+    private void sendBuffer(byte[] bytesToSend, boolean doCleanUp) {
         logger.info(">>> Going to send {} bytes...", bytesToSend.length);
         WebClient client = WebClient.create();
         String result = client
@@ -43,5 +43,9 @@ public class TriggerService {
                 })
                 .bodyToMono(String.class).block();
         logger.info(">>> Result = {}", result);
+        if (doCleanUp) {
+            logger.info(">>> Calling 'disposeLoopsAndConnections'...");
+            reactor.netty.http.HttpResources.disposeLoopsAndConnections();
+        }
     }
 }

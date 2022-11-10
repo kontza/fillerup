@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -20,10 +21,14 @@ public class TriggerRestController {
     }
 
     @GetMapping("/trigger")
-    private void triggerIt() {
+    private void triggerIt(@RequestParam(name = "clean-up", required = false) Boolean cleanUp) {
         taskExecutor.execute(() -> {
             try {
-                triggerService.triggerIt();
+                boolean doCleanUp = true;
+                if (cleanUp != null) {
+                    doCleanUp = cleanUp;
+                }
+                triggerService.triggerIt(doCleanUp);
             } catch (IOException e) {
                 logger.error(">>> Trigger failed: {}", e.getMessage());
                 throw new RuntimeException(e);
