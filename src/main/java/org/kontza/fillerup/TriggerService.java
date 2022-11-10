@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -15,7 +16,7 @@ import java.io.InputStream;
 public class TriggerService {
     private static final Logger logger = LoggerFactory.getLogger(TriggerService.class);
     private static final String SAMPLE_IMAGE = "/sample-image.jpg";
-    private static final String PUSH_URI = "http://localhost:7110";
+    private static final String PUSH_URI = "http://localhost:7110/";
 
     public void triggerIt() throws IOException {
         Class cls = TriggerService.class;
@@ -25,11 +26,13 @@ public class TriggerService {
     }
 
     private void sendBuffer(byte[] bytesToSend) {
+        logger.info(">>> Going to send {} bytes...", bytesToSend.length);
         WebClient client = WebClient.create();
-        Mono<String> result = client
+        String result = client
                 .post()
                 .uri(PUSH_URI)
-                .body(Mono.just(bytesToSend), String.class)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .bodyValue(bytesToSend)
                 .retrieve()
                 .onStatus(HttpStatus::isError, response -> {
                     logger.error(">>> Failed to push: {}", response.statusCode());
@@ -38,7 +41,7 @@ public class TriggerService {
                         return new RuntimeException("Failed!");
                     });
                 })
-                .bodyToMono(String.class);
-        logger.error(">>> Result = {}", result.block());
+                .bodyToMono(String.class).block();
+        logger.info(">>> Result = {}", result);
     }
 }

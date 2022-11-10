@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
-from flask import Flask, flash, request, redirect
-from werkzeug.utils import secure_filename
+import tempfile
+from flask import Flask, make_response, request
 
 
 UPLOAD_FOLDER = "uploads"
@@ -19,10 +19,13 @@ def upload_file():
     if request.headers["Content-Type"] == "application/octet-stream":
         raw_data = request.data
         app.logger.info(f"Got {len(raw_data)} bytes...")
-        with open("/tmp/binary", "wb") as f:
-            f.write(request.data)
-            f.close()
-        return "OK"
+        (fd, filename) = tempfile.mkstemp()
+        with os.fdopen(fd, "wb") as tfile:
+            tfile.write(raw_data)
+        app.logger.info(f"Payload stored to '{filename}'...")
+        r = make_response("OK")
+        r.mimetype = "text/plain"
+        return r
     else:
         return "FAIL"
 
