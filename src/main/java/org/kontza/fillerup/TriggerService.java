@@ -23,20 +23,21 @@ public class TriggerService {
     private static final String SAMPLE_IMAGE = "/sample-image.jpg";
     private static final String PUSH_URI = "http://localhost:7110/";
 
-    public void triggerIt(boolean doCleanUp) throws IOException {
+    public void triggerIt() throws IOException {
         Class cls = TriggerService.class;
         InputStream inputStream = cls.getResourceAsStream(SAMPLE_IMAGE);
         byte[] bytes = IOUtils.toByteArray(inputStream);
-        sendBuffer(bytes, doCleanUp);
+        sendBuffer(bytes);
     }
 
-    private void sendBuffer(byte[] bytesToSend, boolean doCleanUp) {
+    private void sendBuffer(byte[] bytesToSend) {
         logger.info(">>> Going to send {} bytes...", bytesToSend.length);
         LoopResources resources = LoopResources.create("test-loop");
         ConnectionProvider provider = ConnectionProvider.builder("test-pool").build();
 
-        TcpClient tcpClient = TcpClient.create(provider).runOn(resources, false);
-        HttpClient httpClient = HttpClient.from(tcpClient);
+        HttpClient httpClient = HttpClient
+                .create(provider)
+                .runOn(resources);
 
         WebClient webClient = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
