@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
-import reactor.netty.tcp.TcpClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,12 +31,11 @@ public class TriggerService {
 
     private void sendBuffer(byte[] bytesToSend) {
         logger.info(">>> Going to send {} bytes...", bytesToSend.length);
-        LoopResources resources = LoopResources.create("test-loop");
-        ConnectionProvider provider = ConnectionProvider.builder("test-pool").build();
+        DisposableResources disposables = DisposableResources.build();
 
         HttpClient httpClient = HttpClient
-                .create(provider)
-                .runOn(resources);
+                .create(disposables.getConnectionProvider())
+                .runOn(disposables.getLoopResources());
 
         WebClient webClient = WebClient.builder()
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
@@ -58,7 +56,7 @@ public class TriggerService {
                 })
                 .bodyToMono(String.class).block();
         logger.info(">>> Result = {}", result);
-        provider.dispose();
-        resources.dispose();
+        disposables.getConnectionProvider().dispose();
+        disposables.getLoopResources().dispose();
     }
 }
