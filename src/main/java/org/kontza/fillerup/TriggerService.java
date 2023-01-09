@@ -20,7 +20,7 @@ import java.io.InputStream;
 public class TriggerService {
     private static final Logger logger = LoggerFactory.getLogger(TriggerService.class);
     private static final String SAMPLE_IMAGE = "/sample-image.jpg";
-    private static final String PUSH_URI = "http://localhost:7110/";
+    private static final String PUSH_URI = "http://localhost:9110/";
 
     public void triggerIt() throws IOException {
         Class cls = TriggerService.class;
