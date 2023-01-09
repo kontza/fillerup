@@ -21,10 +21,10 @@ public class TriggerRestController {
     }
 
     @GetMapping("/trigger")
-    private void triggerIt() {
+    private void triggerIt(@RequestParam Boolean dirty) {
         taskExecutor.execute(() -> {
             try {
-                triggerService.triggerIt();
+                triggerService.triggerIt(dirty);
             } catch (IOException e) {
                 logger.error(">>> Trigger failed: {}", e.getMessage());
                 throw new RuntimeException(e);

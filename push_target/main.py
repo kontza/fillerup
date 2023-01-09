@@ -14,4 +14,4 @@ async def post_endpoint(request: Request):
     async for chunk in request.stream():
         target.write(chunk)
         count = count + len(chunk)
-    return {"Result": "OK"}
+    return {"result": "OK"}
