@@ -14,7 +14,7 @@ async def post_endpoint(request: Request):
         # 10% change of failing the request due to a non-existent directory.
         target = tempfile.NamedTemporaryFile(dir=f"{UPLOAD_FOLDER}s")
     else:
-        target = tempfile.NamedTemporaryFile(dir=UPLOAD_FOLDER)
+        target = tempfile.NamedTemporaryFile(dir=UPLOAD_FOLDER, delete=False)
     count = 0
     async for chunk in request.stream():
         target.write(chunk)
