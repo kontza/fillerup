@@ -1,8 +1,5 @@
 # TL;DR
-1. Prepare and run the FastAPI-app:
-    1. `cd push_target`
-    1. Prepare the virtual environment: `./venv-prep.sh`
-    1. Start the app: `./run-it.sh`
-1. Start this Java app in another terminal: `./run-spring-boot.sh`
-1. Run cleanly: `./request-loop.sh`
-1. Run to OOM: `./request-loop.sh dirty`
+1. Start Fillerup Java app in a terminal: `. run-spring-boot.sh`
+2. Start a new terminal session and enable a Python virtual environment in it: `. venv-prep.sh`
+3. Start the API application: `. run-api.sh`
+4. Run `request-loop.py`. Check its help to see command line options.
