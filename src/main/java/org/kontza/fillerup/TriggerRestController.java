@@ -11,7 +11,6 @@ import java.io.IOException;
 
 @RestController
 public class TriggerRestController {
-    private static final Logger logger = LoggerFactory.getLogger(TriggerRestController.class);
     private TriggerService triggerService;
     private TaskExecutor taskExecutor;
 
@@ -23,12 +22,7 @@ public class TriggerRestController {
     @GetMapping("/trigger")
     private void triggerIt(@RequestParam Boolean defaultClient) {
         taskExecutor.execute(() -> {
-            try {
-                triggerService.triggerIt(defaultClient);
-            } catch (IOException e) {
-                logger.error(">>> Trigger failed: {}", e.getMessage());
-                throw new RuntimeException(e);
-            }
+            triggerService.triggerIt(defaultClient);
         });
     }
 }

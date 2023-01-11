@@ -20,23 +20,25 @@ public class TriggerService {
     private static final Logger logger = LoggerFactory.getLogger(TriggerService.class);
     public static final String SAMPLE_IMAGE = "/sample-image.jpg";
     public static final String PUSH_URI = "http://localhost:9110/";
-    private WebClient webClient;
 
-    public TriggerService(WebClient webClient) {
-        this.webClient = webClient;
-    }
-
-    public void triggerIt(Boolean defaultClient) throws IOException {
+    public void triggerIt(Boolean defaultClient) {
         Class cls = TriggerService.class;
         InputStream inputStream = cls.getResourceAsStream(SAMPLE_IMAGE);
-        byte[] bytes = IOUtils.toByteArray(inputStream);
-        inputStream.close();
+        byte[] bytes = new byte[0];
+        try {
+            bytes = IOUtils.toByteArray(inputStream);
+            inputStream.close();
+        } catch (IOException e) {
+            logger.error("Input stream operation failed! Cannot continue!");
+            return;
+        }
         String result;
         if (defaultClient) {
             logger.info("Sending {} bytes with default client...", bytes.length);
             result = defaultSendBuffer(bytes);
         } else {
-            result = customSendBuffer(bytes);
+            result = null;
+            logger.warn("Not implemented!");
         }
         if (result.startsWith("Internal")) {
             logger.error("    Result = {}", result);
@@ -47,34 +49,21 @@ public class TriggerService {
     }
 
     private String defaultSendBuffer(byte[] bytesToSend) {
-        WebClient defaultWebClient = WebClient.builder().build();
-        return defaultWebClient
-                .post()
-                .uri(PUSH_URI)
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(bytesToSend.length)
-                .bodyValue(bytesToSend)
-                .retrieve()
-                .onStatus(Predicate.not(HttpStatus::is2xxSuccessful), clientResponse -> Mono.error(new RemoteServiceException("Failed miserably!")))
-                .bodyToMono(String.class)
-                .onErrorMap(throwable -> {
-                    logger.error(">>> BARF:", throwable.getCause().getCause());
-                    return new RemoteServiceException("BARF!");
-                })
-                .onErrorReturn("FAIL!!!")
-                .block();
-    }
-
-    private String customSendBuffer(byte[] bytesToSend) {
-        return webClient
-                .post()
-                .uri(PUSH_URI)
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .contentLength(bytesToSend.length)
-                .bodyValue(bytesToSend)
-                .retrieve()
-                .onStatus(Predicate.not(HttpStatus::is2xxSuccessful), clientResponse -> Mono.error(new RemoteServiceException("Failed miserably!")))
-                .bodyToMono(String.class)
-                .block();
+        try {
+            WebClient defaultWebClient = WebClient.builder().build();
+            return defaultWebClient
+                    .post()
+                    .uri(PUSH_URI)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(bytesToSend.length)
+                    .bodyValue(bytesToSend)
+                    .retrieve()
+                    .onStatus(Predicate.not(HttpStatus::is2xxSuccessful), clientResponse -> Mono.error(new RemoteServiceException("Send failed!", clientResponse.rawStatusCode())))
+                    .bodyToMono(String.class)
+                    .block();
+        } catch (Exception e) {
+            logger.error("defaultSendBuffer failed:", e);
+        }
+        return "";
     }
 }
