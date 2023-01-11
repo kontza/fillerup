@@ -3,14 +3,18 @@ package org.kontza.fillerup;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.function.Predicate;
@@ -50,18 +54,22 @@ public class TriggerService {
 
     private String defaultSendBuffer(byte[] bytesToSend) {
         try {
+            InputStream bis = new ByteArrayInputStream(bytesToSend);
             WebClient defaultWebClient = WebClient.builder().build();
+            var res = BodyInserters.fromResource(new InputStreamResource(bis));
             return defaultWebClient
                     .post()
                     .uri(PUSH_URI)
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .contentLength(bytesToSend.length)
-                    .bodyValue(bytesToSend)
+                    .body(res)
                     .retrieve()
-                    .onStatus(Predicate.not(HttpStatus::is2xxSuccessful), clientResponse -> Mono.error(new RemoteServiceException("Send failed!", clientResponse.rawStatusCode())))
+                    .onStatus(Predicate.not(HttpStatus::is2xxSuccessful), clientResponse -> {
+                        clientResponse.releaseBody();
+                        return Mono.error(new RemoteServiceException("Send failed!", clientResponse.rawStatusCode()));
+                    })
                     .bodyToMono(String.class)
                     .block();
-        } catch (Exception e) {
+        } catch (RemoteServiceException e) {
             logger.error("defaultSendBuffer failed:", e);
         }
         return "";

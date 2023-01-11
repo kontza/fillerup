@@ -10,7 +10,7 @@ CHUNK_SIZE = 655360
 
 @app.post("/")
 async def post_endpoint(request: Request):
-    if random.random() > 0.1:
+    if random.random() > 0.5:
         # 10% change of failing the request due to a non-existent directory.
         target = tempfile.NamedTemporaryFile(dir=f"{UPLOAD_FOLDER}s")
     else:
