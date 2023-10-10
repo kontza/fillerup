@@ -1,2 +1,8 @@
 server:
   port: 6110
+
+org:
+  kontza:
+    top-key:
+      client-id: jotain
+      client-secret: muuta
